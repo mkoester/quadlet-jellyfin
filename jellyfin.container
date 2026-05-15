@@ -1,0 +1,50 @@
+[Unit]
+Description=Jellyfin media server
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=docker.io/jellyfin/jellyfin:latest
+AutoUpdate=registry
+
+# Map service user to the UID/GID the image runs as (1000 by default).
+# Verify before first run: podman inspect docker.io/jellyfin/jellyfin:latest --format '{{.Config.User}}'
+# If it returns a username instead of a number:
+#   podman run --rm --entrypoint grep docker.io/jellyfin/jellyfin:latest jellyfin /etc/passwd
+UserNS=keep-id:uid=1000,gid=1000
+User=1000
+Group=1000
+
+# Environment variables
+EnvironmentFile=%h/.config/containers/systemd/jellyfin.env
+EnvironmentFile=%h/.config/containers/systemd/jellyfin.override.env
+
+# Config and cache directories
+Volume=%h/config:/config:Z
+Volume=%h/cache:/cache:Z
+
+# Media directories — add Volume= lines here for each media location.
+# The jellyfin service user must have read access to these paths on the host.
+# Do NOT add :Z (no SELinux relabeling of shared media dirs).
+# Example:
+# Volume=/mnt/media/movies:/media/movies:ro
+# Volume=/mnt/media/tv:/media/tv:ro
+
+# Hardware transcoding (Intel/AMD) — uncomment to enable
+# AddDevice=/dev/dri/renderD128
+
+# Port mapping — bind to localhost only, reverse proxy handles TLS
+PublishPort=127.0.0.1:8096:8096
+
+# Health check
+HealthCmd=curl -f http://localhost:8096/health || exit 1
+HealthInterval=30s
+HealthTimeout=10s
+HealthRetries=3
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=default.target

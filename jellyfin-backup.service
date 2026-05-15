@@ -1,0 +1,11 @@
+[Unit]
+Description=Jellyfin backup
+
+[Service]
+Type=oneshot
+# Step 1: Consistent snapshot of the main application database
+ExecStart=/usr/bin/sqlite3 %h/config/data/jellyfin.db ".backup '/var/backups/jellyfin/jellyfin.db'"
+# Step 2: Consistent snapshot of the library database
+ExecStart=/usr/bin/sqlite3 %h/config/data/library.db ".backup '/var/backups/jellyfin/library.db'"
+# Step 3: Sync remaining config — excludes the two databases backed up above
+ExecStart=/usr/bin/rsync -a --delete --exclude=jellyfin.db --exclude=library.db --chmod=Dg+rx,Fg+r %h/config/ /var/backups/jellyfin/config/
