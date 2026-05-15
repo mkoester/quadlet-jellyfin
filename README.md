@@ -16,17 +16,6 @@ This project was created with the help of Claude Code and https://github.com/mko
 
 ## Setup
 
-### Add media directories
-
-Edit `jellyfin.container` and add a `Volume=` line for each media location before running the service:
-
-```ini
-Volume=/mnt/media/movies:/media/movies:ro
-Volume=/mnt/media/tv:/media/tv:ro
-```
-
-The `jellyfin` service user must be able to read those host paths (see [Media access](#media-access) below). Do **not** add `:Z` to shared media mounts.
-
 ### Service setup
 
 ```sh
@@ -44,9 +33,9 @@ sudo loginctl enable-linger jellyfin
 # 3. Clone this repo into the service user's home
 sudo -u jellyfin git clone $REPO_URL $REPO
 
-# 4. Create quadlet, config, and cache directories
+# 4. Create quadlet, config, cache, and media directories
 sudo -u jellyfin mkdir -p ~jellyfin/.config/containers/systemd
-sudo -u jellyfin mkdir -p ~jellyfin/{config,cache}
+sudo -u jellyfin mkdir -p ~jellyfin/{config,cache,media}
 
 # 5. Create .override.env from template and fill in required values
 sudo -u jellyfin cp $REPO/jellyfin.override.env.template $REPO/jellyfin.override.env
@@ -90,13 +79,21 @@ sudo -u jellyfin XDG_RUNTIME_DIR=/run/user/$(id -u jellyfin) systemctl --user re
 
 ### Media access
 
-The `jellyfin` service user must be able to read media files on the host. Add it to whatever group owns the media directories:
+Media files live directly in subdirectories of `~jellyfin/media/`, which is mounted into the container at `/media`:
 
-```sh
-sudo usermod -aG <media-group> jellyfin
+```
+~jellyfin/media/
+├── movies/
+└── series/
 ```
 
-Or, if media directories are world-readable, no extra step is needed.
+Create subdirectories as needed:
+
+```sh
+sudo -u jellyfin mkdir -p ~jellyfin/media/{movies,series}
+```
+
+The names are arbitrary — configure the matching paths (e.g. `/media/movies`, `/media/series`) when adding libraries in the Jellyfin web UI.
 
 ### Hardware transcoding (optional)
 
@@ -161,7 +158,7 @@ rsync -az backupuser@jellyfin-host:/var/backups/jellyfin/ /path/to/local/backup/
 
 - Port `8096` is bound to `127.0.0.1` only — Caddy handles TLS termination.
 - All persistent state is at `~jellyfin/config/` and `~jellyfin/cache/` on the host.
-- Media files are bind-mounted from the host; they are not stored under the service user's home.
+- Media files live at `~jellyfin/media/` (symlinks to other locations work fine).
 - `AutoUpdate=registry` is enabled; activate the timer once to get automatic image updates:
   ```sh
   sudo -u jellyfin XDG_RUNTIME_DIR=/run/user/$(id -u jellyfin) systemctl --user enable --now podman-auto-update.timer

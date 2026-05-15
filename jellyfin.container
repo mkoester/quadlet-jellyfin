@@ -19,12 +19,8 @@ EnvironmentFile=%h/.config/containers/systemd/jellyfin.override.env
 Volume=%h/config:/config:Z
 Volume=%h/cache:/cache:Z
 
-# Media directories — add Volume= lines here for each media location.
-# The jellyfin service user must have read access to these paths on the host.
-# Do NOT add :Z (no SELinux relabeling of shared media dirs).
-# Example:
-# Volume=/mnt/media/movies:/media/movies:ro
-# Volume=/mnt/media/tv:/media/tv:ro
+# Media directory — read-only, no :Z (not owned by the container)
+Volume=%h/media:/media:ro
 
 # Hardware transcoding (Intel/AMD) — uncomment to enable
 # AddDevice=/dev/dri/renderD128
