@@ -16,19 +16,6 @@ This project was created with the help of Claude Code and https://github.com/mko
 
 ## Setup
 
-### Verify the image UID
-
-Before creating the service user, check the UID the image runs as and adjust the `UserNS`/`User`/`Group` lines in `jellyfin.container` if necessary:
-
-```sh
-podman pull docker.io/jellyfin/jellyfin:latest
-podman inspect docker.io/jellyfin/jellyfin:latest --format '{{.Config.User}}'
-# If the above returns a username instead of a number:
-podman run --rm --entrypoint grep docker.io/jellyfin/jellyfin:latest jellyfin /etc/passwd
-```
-
-The container file assumes **UID/GID 1000**. Update the three lines (`UserNS=`, `User=`, `Group=`) if the actual UID differs.
-
 ### Add media directories
 
 Edit `jellyfin.container` and add a `Volume=` line for each media location before running the service:

@@ -7,13 +7,9 @@ Wants=network-online.target
 Image=docker.io/jellyfin/jellyfin:latest
 AutoUpdate=registry
 
-# Map service user to the UID/GID the image runs as (1000 by default).
-# Verify before first run: podman inspect docker.io/jellyfin/jellyfin:latest --format '{{.Config.User}}'
-# If it returns a username instead of a number:
-#   podman run --rm --entrypoint grep docker.io/jellyfin/jellyfin:latest jellyfin /etc/passwd
-UserNS=keep-id:uid=1000,gid=1000
-User=1000
-Group=1000
+# The image runs as root (UID 0) inside the container.
+# In rootless Podman the default user-namespace mapping makes root-in-container
+# equivalent to the service user on the host, so no UserNS=keep-id is needed.
 
 # Environment variables
 EnvironmentFile=%h/.config/containers/systemd/jellyfin.env
