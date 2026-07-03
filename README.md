@@ -33,9 +33,9 @@ sudo loginctl enable-linger jellyfin
 # 3. Clone this repo into the service user's home
 sudo -u jellyfin git clone $REPO_URL $REPO
 
-# 4. Create quadlet, config, cache, and media directories
+# 4. Create quadlet, config, and cache directories
 sudo -u jellyfin mkdir -p ~jellyfin/.config/containers/systemd
-sudo -u jellyfin mkdir -p ~jellyfin/{config,cache,media}
+sudo -u jellyfin mkdir -p ~jellyfin/{config,cache}
 
 # 5. Create .override.env from template and fill in required values
 sudo -u jellyfin cp $REPO/jellyfin.override.env.template $REPO/jellyfin.override.env
@@ -79,21 +79,13 @@ sudo -u jellyfin XDG_RUNTIME_DIR=/run/user/$(id -u jellyfin) systemctl --user re
 
 ### Media access
 
-Media files live directly in subdirectories of `~jellyfin/media/`, which is mounted into the container at `/media`:
+Uncomment and set the `Volume=` line for media in `jellyfin.container`, pointing to the actual host path. Podman does not resolve symlinks for bind mount sources, so the path must be the real directory:
 
-```
-~jellyfin/media/
-├── movies/
-└── series/
+```ini
+Volume=/mnt/data/jellyfin/media:/media:z,ro
 ```
 
-Create subdirectories as needed:
-
-```sh
-sudo -u jellyfin mkdir -p ~jellyfin/media/{movies,series}
-```
-
-The names are arbitrary — configure the matching paths (e.g. `/media/movies`, `/media/series`) when adding libraries in the Jellyfin web UI.
+The container path (`/media`) and its subdirectory names are arbitrary — configure the matching paths (e.g. `/media/movies`, `/media/series`) when adding libraries in the Jellyfin web UI.
 
 ### Hardware transcoding (optional)
 
@@ -136,7 +128,7 @@ Jellyfin stores configuration and metadata under `~jellyfin/config/` on the host
 # 1. Create backup staging directories (owned by jellyfin, readable by backup-readers group)
 sudo mkdir -p /var/backups/jellyfin/config
 sudo chown -R jellyfin:backup-readers /var/backups/jellyfin
-sudo chmod -R 750 /var/backups/jellyfin
+sudo chmod 2750 /var/backups/jellyfin
 
 # 2. Symlink the backup service and timer from the repo
 sudo -u jellyfin mkdir -p ~jellyfin/.config/systemd/user
