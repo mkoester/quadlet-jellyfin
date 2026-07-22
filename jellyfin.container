@@ -19,8 +19,10 @@ EnvironmentFile=%h/.config/containers/systemd/jellyfin.override.env
 Volume=%h/config:/config:Z
 Volume=%h/cache:/cache:Z
 
-# Media directory — :z applies a shared SELinux label (unlike :Z which is exclusive to one container)
-Volume=%h/media:/media:z,ro
+# Media directory — set to the actual host path (symlinks are not resolved by Podman).
+# :z applies a shared SELinux label (unlike :Z which is exclusive to one container).
+# Example:
+# Volume=/mnt/data/jellyfin/media:/media:z,ro
 
 # Hardware transcoding (Intel/AMD) — uncomment to enable
 # AddDevice=/dev/dri/renderD128
