@@ -129,6 +129,7 @@ Jellyfin stores configuration and metadata under `~jellyfin/config/` on the host
 sudo mkdir -p /var/backups/jellyfin/config
 sudo chown -R jellyfin:backup-readers /var/backups/jellyfin
 sudo chmod 2750 /var/backups/jellyfin
+sudo setfacl -R -m g:backup-readers:rX,d:g:backup-readers:rX /var/backups/jellyfin
 
 # 2. Symlink the backup service and timer from the repo
 sudo -u jellyfin mkdir -p ~jellyfin/.config/systemd/user
